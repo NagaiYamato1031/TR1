@@ -1,13 +1,13 @@
 #pragma once
 
-struct Vector2;
-struct Vector3;
-struct Vector4;
+#include "Vector2.h"
+#include "Vector3.h"
+#include "Vector4.h"
+#include "Matrix4x4.h"
 
 struct Matrix3x3 {
 	float m[3][3];
 };
-struct Matrix4x4;
 
 #pragma region Oprator OverLoad
 
