@@ -1,5 +1,5 @@
 #pragma once
-
+#include <list>
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
@@ -96,6 +96,35 @@ namespace Mymath {
 	/// <param name="matrix">行列</param>
 	/// <returns>変換座標</returns>
 	Vector2 Transform(const Vector2& vector, const Matrix3x3& matrix);
+
+	/// <summary>
+	/// Catmull-rom スプライン上の点を求める関数
+	/// </summary>
+	/// <param name="p0">1 つ目の点</param>
+	/// <param name="p1">2 つ目の点</param>
+	/// <param name="p2">3 つ目の点</param>
+	/// <param name="p3">4 つ目の点</param>
+	/// <param name="t">値</param>
+	/// <returns>Catmull-romスプライン曲線上の点</returns>
+	Vector2 CatmullRom(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Vector2& p3, float t);
+
+	/// <summary>
+	/// 線形補間する関数
+	/// </summary>
+	/// <param name="a">点 1</param>
+	/// <param name="b">点 2</param>
+	/// <param name="t">0 ～ 1</param>
+	/// <returns>二点の間の点</returns>
+	Vector2 Lerp(const Vector2& a, const Vector2& b, float t);
+	/// <summary>
+	/// n 次ベジエ曲線上の点を求める関数
+	/// </summary>
+	/// <param name="p0">点 1</param>
+	/// <param name="p1">点 2</param>
+	/// <param name="p2">点 3</param>
+	/// <param name="t">0 ～ 1</param>
+	/// <returns>点</returns>
+	Vector2 Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t);
 
 	// End Vector2
 #pragma endregion

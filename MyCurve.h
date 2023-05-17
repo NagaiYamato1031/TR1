@@ -9,12 +9,15 @@ enum class LineType {
 	Bezier,		// ベジエ
 };
 
+extern bool isDrawControl;
+extern bool isDrawInterp;
+
 class MyCurve
 {
 public:
 
 	// 最大補間点数
-	const static int kMaxInterPolation = 1024;
+	const static int kMaxInterPolation = 64;
 
 	/// <summary>
 	/// 初期化
@@ -22,20 +25,39 @@ public:
 	void Initialize();
 
 	/// <summary>
+	/// 補間点を作成する
+	/// </summary>
+	void SetInterp();
+	/// <summary>
+	/// 補間点を作成する
+	/// </summary>
+	/// <param name="type">曲線のタイプを指定</param>
+	void SetInterp(LineType type);
+
+
+	/// <summary>
 	/// 描画
 	/// 絶対書き直して自由度高くする
 	/// </summary>
 	void Draw();
-	
+
 	// 制御点
-	std::list<Vector2> controlPoint;
+	std::list<Vector2> controlPoint_;
+
+	// 補間点
+	std::list<Vector2> interpPoint_;
 
 	// 線のタイプ
-	LineType type = LineType::Straight;
+	LineType type_ = LineType::Straight;
 
-	// 補間率(0 ～ 100 : 0 の場合点と点を通る直線とする)
-	//int Interpolate = 100;
+	// 点と点の補間数(1 ～ 64)
+	int interpolate_ = 8;
 
+	/// <summary>
+	/// リストの要素数を確認する
+	/// </summary>
+	/// <returns>線が描けるか: true, false</returns>
+	bool CheckElements();
 
 	/// <summary>
 	/// 値を消去する
@@ -43,17 +65,17 @@ public:
 	/// <param name="index">添え字</param>
 	///void Remove(int index);
 
-	/// <summary>
-	/// リスト内の要素数を返す
-	/// </summary>
-	/// <returns>リスト内の要素数</returns>
-	int GetCount();
-
 private:
+
+	void InterpStraight();
+	void InterpCSpline();
+	void InterpBezier();
 
 	void DrawStraight();
 	void DrawCSpline();
 	void DrawBezier();
+
+
 
 };
 
