@@ -2,6 +2,17 @@
 #include <cassert>
 #include <cmath>
 
+
+float Mymath::Clamp(float t, float min, float max) {
+	if (t < min) {
+		return min;
+	}
+	else if (max < t) {
+		return max;
+	}
+	return t;
+}
+
 #pragma region Vector
 
 #pragma region Vector2

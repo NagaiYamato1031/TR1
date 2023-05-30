@@ -9,7 +9,9 @@ enum class LineType {
 	Bezier,		// ベジエ
 };
 
+// 制御点を描画するか
 extern bool isDrawControl;
+// 補間点を描画するか
 extern bool isDrawInterp;
 
 class MyCurve
@@ -34,12 +36,29 @@ public:
 	/// <param name="type">曲線のタイプを指定</param>
 	void SetInterp(LineType type);
 
-
 	/// <summary>
 	/// 描画
 	/// 絶対書き直して自由度高くする
 	/// </summary>
 	void Draw();
+
+	/// <summary>
+	/// 曲線を C スプライン曲線に変換する
+	/// </summary>
+	/// <param name="interpolate">分割数</param>
+	/// <returns>C スプライン曲線</returns>
+	MyCurve ConvertCSpline(int interpolate);
+
+	/// <summary>
+	/// 全体の中での t の値の場所を返す
+	/// </summary>
+	/// <param name="t">0 ～ 1</param>
+	/// <returns>0 ～ 1 にある t の近似値</returns>
+	Vector2 GetValueT(float t);
+
+	// 始点の位置
+	Vector2 startPositon_;
+
 
 	// 制御点
 	std::list<Vector2> controlPoint_;

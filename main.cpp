@@ -58,6 +58,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bezier.controlPoint_.push_back({ 400,450 });
 	bezier.controlPoint_.push_back({ 500,620 });
 	bezier.controlPoint_.push_back({ 600,650 });
+	bezier.SetInterp();
+
+	MyCurve bezierToCSpline;
+	bezierToCSpline.Initialize();
+	bezierToCSpline = bezier.ConvertCSpline(6);
+	bezierToCSpline.interpolate_ = 4;
+	bezierToCSpline.startPositon_ = { 600.0f,0.0f };
 
 	MyCurve test;
 	test.Initialize();
@@ -92,6 +99,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		straight.SetInterp();
 		cSpline.SetInterp();
 		bezier.SetInterp();
+		bezierToCSpline.SetInterp();
 		test.SetInterp();
 
 		///
@@ -108,6 +116,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		cSpline.Draw();
 		Novice::ScreenPrintf(10, 460, "Bezier");
 		bezier.Draw();
+		Novice::ScreenPrintf(700, 460, "BezierToCSpline");
+		bezierToCSpline.Draw();
 		Novice::ScreenPrintf(800, 60, "test");
 		test.Draw();
 

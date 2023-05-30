@@ -39,6 +39,15 @@ inline extern Vector4& operator*=(Vector4& v, float scalar);
 
 namespace Mymath {
 
+	/// <summary>
+	/// 値を丸める
+	/// </summary>
+	/// <param name="t">値</param>
+	/// <param name="min">最小値</param>
+	/// <param name="max">最大値</param>
+	/// <returns>丸められた値</returns>
+	float Clamp(float t, float min, float max);
+
 #pragma region Vector
 
 #pragma region Vector2

@@ -12,7 +12,7 @@ bool isDrawControl = true;
 bool isDrawInterp = true;
 
 void MyCurve::Initialize() {
-
+	startPositon_ = { 0.0f,0.0f };
 }
 
 void MyCurve::SetInterp() {
@@ -86,13 +86,13 @@ void MyCurve::Draw() {
 	if (isDrawControl) {
 		// 制御点を描画する
 		for (Vector2 p : controlPoint_) {
-			Novice::DrawEllipse(int(p.x), int(p.y), 10, 10, 0.0f, RED, kFillModeSolid);
+			Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 10, 10, 0.0f, RED, kFillModeSolid);
 		}
 	}
 	if (isDrawInterp) {
 		// 補間点を描画する
 		for (Vector2 p : interpPoint_) {
-			Novice::DrawEllipse(int(p.x), int(p.y), 5, 5, 0.0f, 0x00FF0077, kFillModeSolid);
+			Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 5, 5, 0.0f, 0x00FF0077, kFillModeSolid);
 		}
 	}
 
@@ -104,7 +104,7 @@ void MyCurve::Draw() {
 	next++;
 	// ここから描画
 	for (; next != interpPoint_.end(); current++, next++) {
-		Novice::DrawLine(int(current->x), int(current->y), int(next->x), int(next->y), WHITE);
+		Novice::DrawLine(int(current->x + startPositon_.x), int(current->y + startPositon_.y), int(next->x + startPositon_.x), int(next->y + startPositon_.y), WHITE);
 	}
 	//// ここは Type によって関数分けしたい
 	//switch (type_)
@@ -132,6 +132,35 @@ void MyCurve::Draw() {
 	//}
 }
 
+MyCurve MyCurve::ConvertCSpline(int interpolate = 8) {
+	// 変換後の曲線
+	MyCurve resurt;
+	resurt.type_ = LineType::CSpline;
+	// 分割数に合わせて曲線を分割
+	for (int i = 0; i < interpolate; i++) {
+		float t = i / (float)interpolate;
+		resurt.controlPoint_.push_back(GetValueT(t));
+	}
+	resurt.controlPoint_.push_back(GetValueT(1.0f));
+	resurt.SetInterp();
+	return resurt;
+}
+
+
+Vector2 MyCurve::GetValueT(float t) {
+	// 値を丸める
+	t = Mymath::Clamp(t, 0.0f, 1.0f);
+	// 補間点の最大数を取り出す
+	int size = (int)interpPoint_.size();
+	// t の値を最大数のうちの近い整数に戻す
+	int nearIndex = (int)round(size * t) - 1;
+	// イテレーター
+	std::list<Vector2>::iterator index = interpPoint_.begin();
+	for (int i = 0; i < nearIndex; i++) {
+		index++;
+	}
+	return *index;
+}
 
 bool MyCurve::CheckElements() {
 	// 点が 2 以下の場合線を描けない
@@ -216,9 +245,9 @@ void MyCurve::InterpCSpline() {
 		interpPoint_.push_back(Mymath::CatmullRom(*current, *current, *next, *two_next, t));
 	}
 	// 制御点が 3 の場合補間を終了
-	if (controlPoint_.size() == 3) {
+	/*if (controlPoint_.size() == 3) {
 		return;
-	}
+	}*/
 	// 4 つ目の点
 	std::list<Vector2>::iterator three_next = two_next;
 	// 移動
@@ -291,7 +320,7 @@ void MyCurve::InterpBezier() {
 		next = current;
 		next++;
 		//interpPoint_.push_back(Mymath::Lerp(*current, *next, t));
-		interpPoint_.push_back(Mymath::Lerp(parameters.front(), parameters.back(), t)); 
+		interpPoint_.push_back(Mymath::Lerp(parameters.front(), parameters.back(), t));
 	}
 	// 補間数分計算する
 	// 処理の関係で補間点が 1 / 2 になるため二倍にする
