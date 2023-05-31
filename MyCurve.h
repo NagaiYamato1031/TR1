@@ -61,7 +61,7 @@ public:
 
 
 	// 制御点
-	std::list<Vector2> controlPoint_;
+	std::list<Vector2> anchorPoint_;
 
 	// 補間点
 	std::list<Vector2> interpPoint_;

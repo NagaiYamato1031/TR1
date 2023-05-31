@@ -85,7 +85,7 @@ void MyCurve::Draw() {
 
 	if (isDrawControl) {
 		// 制御点を描画する
-		for (Vector2 p : controlPoint_) {
+		for (Vector2 p : anchorPoint_) {
 			Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 10, 10, 0.0f, RED, kFillModeSolid);
 		}
 	}
@@ -139,9 +139,9 @@ MyCurve MyCurve::ConvertCSpline(int interpolate = 8) {
 	// 分割数に合わせて曲線を分割
 	for (int i = 0; i < interpolate; i++) {
 		float t = i / (float)interpolate;
-		resurt.controlPoint_.push_back(GetValueT(t));
+		resurt.anchorPoint_.push_back(GetValueT(t));
 	}
-	resurt.controlPoint_.push_back(GetValueT(1.0f));
+	resurt.anchorPoint_.push_back(GetValueT(1.0f));
 	resurt.SetInterp();
 	return resurt;
 }
@@ -164,7 +164,7 @@ Vector2 MyCurve::GetValueT(float t) {
 
 bool MyCurve::CheckElements() {
 	// 点が 2 以下の場合線を描けない
-	if (controlPoint_.size() < 2) {
+	if (anchorPoint_.size() < 2) {
 		return false;
 	}
 	else if (interpPoint_.size() < 2) {
@@ -177,12 +177,12 @@ bool MyCurve::CheckElements() {
 
 void MyCurve::InterpStraight() {
 	// 制御点が存在しない場合処理しない
-	if (controlPoint_.size() == 0) {
+	if (anchorPoint_.size() == 0) {
 		return;
 	}
 	// リスト内の数が 2 以下の時は始点のみ
-	if (controlPoint_.size() < 2) {
-		interpPoint_ = controlPoint_;
+	if (anchorPoint_.size() < 2) {
+		interpPoint_ = anchorPoint_;
 		return;
 	}
 	///////////////////////////////////////////////
@@ -190,7 +190,7 @@ void MyCurve::InterpStraight() {
 	///////////////////////////////////////////////
 
 	// 現在の参照する点を基準にして線を描画する
-	std::list<Vector2>::iterator current = controlPoint_.begin();
+	std::list<Vector2>::iterator current = anchorPoint_.begin();
 	// 次の点
 	std::list<Vector2>::iterator next = current;
 	// 次の点に移動させる
@@ -201,7 +201,7 @@ void MyCurve::InterpStraight() {
 	//////////
 
 	// リスト内すべてを参照する
-	for (; next != controlPoint_.end(); current++, next++) {
+	for (; next != anchorPoint_.end(); current++, next++) {
 		// 指定した補間数で補間
 		interpPoint_.push_back(Mymath::Lerp(*current, *next, 0.0f));
 		for (int i = 1; i <= interpolate_; i++) {
@@ -214,7 +214,7 @@ void MyCurve::InterpStraight() {
 }
 void MyCurve::InterpCSpline() {
 	// 要素数が 3 以下なら
-	if (controlPoint_.size() < 3) {
+	if (anchorPoint_.size() < 3) {
 		// 直線なので直線で補間
 		InterpStraight();
 		return;
@@ -224,7 +224,7 @@ void MyCurve::InterpCSpline() {
 	///////////////////////////////////////////////
 
 	// 現在の参照する点を基準にして線を描画する
-	std::list<Vector2>::iterator current = controlPoint_.begin();
+	std::list<Vector2>::iterator current = anchorPoint_.begin();
 	// 次の点
 	std::list<Vector2>::iterator next = current;
 	// 次の点に移動させる
@@ -254,7 +254,7 @@ void MyCurve::InterpCSpline() {
 	three_next++;
 
 	// 要素数が 4 以上の場合繰り返す
-	for (; three_next != controlPoint_.end(); current++, next++, two_next++, three_next++) {
+	for (; three_next != anchorPoint_.end(); current++, next++, two_next++, three_next++) {
 		//Novice::DrawLine(int(current->x), int(current->y), int(next->x), int(next->y), WHITE);
 		// 補間点
 		interpPoint_.push_back(Mymath::CatmullRom(*current, *next, *two_next, *three_next, 0.0f));
@@ -272,7 +272,7 @@ void MyCurve::InterpCSpline() {
 }
 void MyCurve::InterpBezier() {
 	// 要素数が 3 以下なら
-	if (controlPoint_.size() < 3) {
+	if (anchorPoint_.size() < 3) {
 		// 直線なので直線で補間
 		InterpStraight();
 		return;
@@ -284,7 +284,7 @@ void MyCurve::InterpBezier() {
 	{
 		float t = 0.0f;
 		// 補間するための中間点
-		std::list<Vector2> preParameters = controlPoint_;
+		std::list<Vector2> preParameters = anchorPoint_;
 		// 補間した後の中間点
 		std::list<Vector2> parameters;
 		// 現在の参照する点を基準にして線を描画する
@@ -327,7 +327,7 @@ void MyCurve::InterpBezier() {
 	for (int i = 1; i <= interpolate_ * 2; i++) {
 		float t = static_cast<float>(i) / static_cast<float>(interpolate_ * 2);
 		// 補間するための中間点
-		std::list<Vector2> preParameters = controlPoint_;
+		std::list<Vector2> preParameters = anchorPoint_;
 		// 補間した後の中間点
 		std::list<Vector2> parameters;
 		// 現在の参照する点を基準にして線を描画する
@@ -371,33 +371,33 @@ void MyCurve::InterpBezier() {
 
 void MyCurve::DrawStraight() {
 	// 現在の参照する点を基準にして線を描画する
-	std::list<Vector2>::iterator current = controlPoint_.begin();
+	std::list<Vector2>::iterator current = anchorPoint_.begin();
 	// 次の点
 	std::list<Vector2>::iterator next = current;
 	// 次の点に移動させる
 	next++;
 	// ここから描画
-	for (next; next != controlPoint_.end(); next++, current++) {
+	for (next; next != anchorPoint_.end(); next++, current++) {
 		Novice::DrawLine(int(current->x), int(current->y), int(next->x), int(next->y), WHITE);
 	}
 }
 void MyCurve::DrawCSpline() {
 	// 現在の参照する点を基準にして線を描画する
-	std::list<Vector2>::iterator current = controlPoint_.begin();
+	std::list<Vector2>::iterator current = anchorPoint_.begin();
 	// 次の点
 	std::list<Vector2>::iterator next = current;
 	// 次の点に移動させる
 	next++;
 	// ここから描画
 	// 要素数が 3 以下なら
-	if (controlPoint_.size() < 3) {
-		for (next; next != controlPoint_.end(); next++, current++) {
+	if (anchorPoint_.size() < 3) {
+		for (next; next != anchorPoint_.end(); next++, current++) {
 			Novice::DrawLine(int(current->x), int(current->y), int(next->x), int(next->y), WHITE);
 		}
 		return;
 	}
 	// 要素数が 3 なら
-	else if (controlPoint_.size() == 3) {
+	else if (anchorPoint_.size() == 3) {
 		// 補間点
 		std::list<Vector2> interpList;
 		for (int i = 0; i < kMaxInterPolation; i++) {
@@ -423,7 +423,7 @@ void MyCurve::DrawCSpline() {
 		InterpList.push_back(Mymath::CatmullRom(*current, *current, *next, *two_next, t));
 	}
 	// 要素数が 4 以上の場合
-	for (; three_next != controlPoint_.end(); current++, next++, two_next++, three_next++) {
+	for (; three_next != anchorPoint_.end(); current++, next++, two_next++, three_next++) {
 		//Novice::DrawLine(int(current->x), int(current->y), int(next->x), int(next->y), WHITE);
 		// 補間点
 		for (int i = 0; i < kMaxInterPolation; i++) {
@@ -455,13 +455,13 @@ void MyCurve::DrawCSpline() {
 }
 void MyCurve::DrawBezier() {
 	// 現在の参照する点を基準にして線を描画する
-	std::list<Vector2>::iterator current = controlPoint_.begin();
+	std::list<Vector2>::iterator current = anchorPoint_.begin();
 	// 次の点
 	std::list<Vector2>::iterator next = current;
 	// 次の点に移動させる
 	next++;
 	// ここから描画
-	for (next; next != controlPoint_.end(); next++, current++) {
+	for (next; next != anchorPoint_.end(); next++, current++) {
 		Novice::DrawLine(int(current->x), int(current->y), int(next->x), int(next->y), WHITE);
 	}
 }
