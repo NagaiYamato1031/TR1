@@ -15,6 +15,35 @@ const char kWindowTitle[] = "LE2A_12_ナガイ_ヤマト_TR1";
 const int kWindowWidth = 1280;
 const int kWindowHeight = 720;
 
+void ImGuiTree(MyCurve& curve, const char* name) {
+	if (ImGui::TreeNode(name)) {
+		if (ImGui::RadioButton("Straight", curve.type_ == LineType::Straight)) {
+			curve.type_ = LineType::Straight;
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("CSpline", curve.type_ == LineType::CSpline)) {
+			curve.type_ = LineType::CSpline;
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Bezier", curve.type_ == LineType::Bezier)) {
+			curve.type_ = LineType::Bezier;
+		}
+
+		ImGui::SliderInt("interpolate", &curve.interpolate_, 1, MyCurve::kMaxInterPolation);
+
+
+		ImGui::BeginChild(ImGui::GetID((void*)0), ImVec2(300, 150), ImGuiWindowFlags_NoTitleBar);
+		for (int i = 0; i < curve.anchorPoint_.size(); i++) {
+			char str[16];
+			sprintf_s(str, "Index:%d", i);
+			ImGui::DragFloat2(str, &curve.anchorPoint_[i].x, 1.0f);
+		}
+		ImGui::EndChild();
+		ImGui::TreePop();
+	}
+}
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -65,6 +94,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bezier.anchorPoint_.push_back({ 500,100 });
 	bezier.SetInterp();
 
+	int ConvertCSplineInterp = 6;
+
 	MyCurve bezierToCSpline;
 	bezierToCSpline.Initialize();
 	bezierToCSpline = bezier.ConvertCSpline(6);
@@ -74,10 +105,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MyCurve test;
 	test.Initialize();
 
-	test.type_ = LineType::Bezier;
+	test.startPositon_ = { 700,150 };
+	test.type_ = LineType::CSpline;
 	test.interpolate_ = 4;
-	test.anchorPoint_.push_back({ 800,100 });
-	test.anchorPoint_.push_back({ 900,100 });
+	test.anchorPoint_.push_back({ 0,0 });
+	test.anchorPoint_.push_back({ 100,50 });
+	test.anchorPoint_.push_back({ 200,-50 });
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -97,7 +130,41 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region ImGui
 
 		ImGui::Begin("LineControll");
-		
+
+		ImGui::Checkbox("AnchorDraw", &isDrawControl);
+		ImGui::Checkbox("InterpDraw", &isDrawInterp);
+
+		ImGuiTree(straight, "straight");
+		ImGuiTree(cSpline, "cspline");
+#pragma region Bezier
+		if (ImGui::TreeNode("bezier")) {
+			if (ImGui::RadioButton("Straight", bezier.type_ == LineType::Straight)) {
+				bezier.type_ = LineType::Straight;
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("CSpline", bezier.type_ == LineType::CSpline)) {
+				bezier.type_ = LineType::CSpline;
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Bezier", bezier.type_ == LineType::Bezier)) {
+				bezier.type_ = LineType::Bezier;
+			}
+
+			ImGui::SliderInt("interpolate", &bezier.interpolate_, 1, MyCurve::kMaxInterPolation);
+			ImGui::SliderInt("ConvertInterp", &ConvertCSplineInterp, 1, 8);
+
+
+			ImGui::BeginChild(ImGui::GetID((void*)0), ImVec2(300, 150), ImGuiWindowFlags_NoTitleBar);
+			for (int i = 0; i < bezier.anchorPoint_.size(); i++) {
+				char str[16];
+				sprintf_s(str, "Index:%d", i);
+				ImGui::DragFloat2(str, &bezier.anchorPoint_[i].x, 1.0f);
+			}
+			ImGui::EndChild();
+			ImGui::TreePop();
+		}
+#pragma endregion
+		ImGuiTree(test, "test");
 
 		ImGui::End();
 
@@ -113,6 +180,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		straight.SetInterp();
 		cSpline.SetInterp();
 		bezier.SetInterp();
+		bezierToCSpline = bezier.ConvertCSpline(ConvertCSplineInterp);
+		bezierToCSpline.interpolate_ = 4;
+		bezierToCSpline.startPositon_ = { 700.0f,550.0f };
 		bezierToCSpline.SetInterp();
 		test.SetInterp();
 
@@ -130,11 +200,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		cSpline.Draw();
 		Novice::ScreenPrintf(10, 460, "Bezier");
 		bezier.Draw();
-		Novice::ScreenPrintf(700, 460, "BezierToCSpline");
+		Novice::ScreenPrintf(700, 460, "ConvertCSpline");
 		bezierToCSpline.Draw();
-		Novice::ScreenPrintf(800, 60, "test");
 		test.Draw();
-
 
 		///
 		/// ↑描画処理ここまで
@@ -159,3 +227,5 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Novice::Finalize();
 	return 0;
 }
+
+// 正規のスプライン曲線だとバグらないから、ConvertCSplineでバグってる可能性大

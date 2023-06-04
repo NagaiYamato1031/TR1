@@ -1,5 +1,5 @@
 #pragma once
-#include <list>
+#include <vector>
 
 #include "Mymath.h"
 
@@ -27,7 +27,7 @@ public:
 	void Initialize();
 
 	/// <summary>
-	/// 補間点を作成する
+	/// 補間点を作成する(変更したときに呼び出す)
 	/// </summary>
 	void SetInterp();
 	/// <summary>
@@ -61,10 +61,10 @@ public:
 
 
 	// 制御点
-	std::list<Vector2> anchorPoint_;
+	std::vector<Vector2> anchorPoint_;
 
 	// 補間点
-	std::list<Vector2> interpPoint_;
+	std::vector<Vector2> interpPoint_;
 
 	// 線のタイプ
 	LineType type_ = LineType::Straight;
@@ -90,9 +90,9 @@ private:
 	void InterpCSpline();
 	void InterpBezier();
 
-	void DrawStraight();
-	void DrawCSpline();
-	void DrawBezier();
+	//void DrawStraight();
+	//void DrawCSpline();
+	//void DrawBezier();
 
 
 
