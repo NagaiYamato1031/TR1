@@ -84,15 +84,18 @@ void MyCurve::Draw() {
 	}
 
 	if (isDrawControl) {
+		int radius = 10;
 		// 制御点を描画する
 		for (Vector2 p : anchorPoint_) {
-			Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 10, 10, 0.0f, RED, kFillModeSolid);
+			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, RED, kFillModeSolid);
 		}
 	}
 	if (isDrawInterp) {
+		int radius = 5;
 		// 補間点を描画する
 		for (Vector2 p : interpPoint_) {
-			Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 5, 5, 0.0f, 0x00FF0077, kFillModeSolid);
+			//Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 5, 5, 0.0f, 0x00FF0077, kFillModeSolid);
+			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, 0x00FF0077, kFillModeSolid);
 		}
 	}
 

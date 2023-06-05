@@ -1,4 +1,5 @@
 #include <Novice.h>
+#include <stdio.h>
 
 #include <chrono>
 #include "imgui.h"
@@ -10,6 +11,7 @@
 #include "Matrix4x4.h"
 
 #include "MyCurve.h"
+
 
 const char kWindowTitle[] = "LE2A_12_ナガイ_ヤマト_TR1";
 const int kWindowWidth = 1280;
@@ -54,6 +56,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
+#pragma region Curve
+
 	MyCurve straight;
 	straight.Initialize();
 
@@ -96,9 +100,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	int ConvertCSplineInterp = 6;
 
+
 	MyCurve bezierToCSpline;
 	bezierToCSpline.Initialize();
-	bezierToCSpline = bezier.ConvertCSpline(6);
+	bezierToCSpline = bezier.ConvertCSpline(ConvertCSplineInterp);
 	bezierToCSpline.interpolate_ = 4;
 	bezierToCSpline.startPositon_ = { 700.0f,550.0f };
 
@@ -112,8 +117,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	test.anchorPoint_.push_back({ 100,50 });
 	test.anchorPoint_.push_back({ 200,-50 });
 
+#pragma endregion
+
+#pragma region FPS 計測用
+
+#pragma endregion
+
+
+	const int kAvarageMax = 10;
+
+	int avarageCount = 0;
+	double avarages[kAvarageMax] = { 0 };
+	double avarage{ 0 };
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
+		auto start = std::chrono::steady_clock::now();
+
 		// フレームの開始
 		Novice::BeginFrame();
 
@@ -121,13 +141,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		memcpy(preKeys, keys, 256);
 		Novice::GetHitKeyStateAll(keys);
 
-		auto start = std::chrono::system_clock::now();
-
 		///
 		/// ↓更新処理ここから
 		///
 
 #pragma region ImGui
+
+		ImGui::Begin("infomation");
+
+		ImGui::Text("fps : %.02lf", avarage);
+
+		ImGui::End();
 
 		ImGui::Begin("LineControll");
 
@@ -204,6 +228,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		bezierToCSpline.Draw();
 		test.Draw();
 
+
 		///
 		/// ↑描画処理ここまで
 		///
@@ -211,11 +236,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// フレームの終了
 		Novice::EndFrame();
 
+#pragma region FPS 計測
 
-		auto end = std::chrono::system_clock::now();
+		auto end = std::chrono::steady_clock::now();
 		auto time = end - start;
-		auto fps = std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
-		Novice::ScreenPrintf(10, 10, "%d", (1000 / fps));
+		auto fps = 1000000.0 / static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(time).count());
+
+		avarages[avarageCount] = fps;
+		avarageCount++;
+		if (kAvarageMax <= avarageCount) {
+			avarageCount = 0;
+			double temp{ 0 };
+			for (int i = 0; i < kAvarageMax; i++) {
+				temp += avarages[i];
+			}
+			avarage = temp / (double)kAvarageMax;
+		}
+
+#pragma endregion
+
 
 		// ESCキーが押されたらループを抜ける
 		if (preKeys[DIK_ESCAPE] == 0 && keys[DIK_ESCAPE] != 0) {
