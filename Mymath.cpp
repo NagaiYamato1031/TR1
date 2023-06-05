@@ -2,10 +2,16 @@
 #include <cassert>
 #include <cmath>
 
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix4x4.h"
+
+float Mymath::Clamp(float t, float min, float max) {
+	if (t < min) {
+		return min;
+	}
+	else if (max < t) {
+		return max;
+	}
+	return t;
+}
 
 #pragma region Vector
 
@@ -88,6 +94,28 @@ Vector2 Mymath::Transform(const Vector2& vector, const Matrix3x3& matrix) {
 	temp.y /= temp.z;
 	temp.z /= temp.z;
 	return Vector2{ temp.x, temp.y };
+}
+
+Vector2 Mymath::CatmullRom(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Vector2& p3, float t) {
+	Vector2 pt =
+		(1 / 2.0f) * (
+			(Vector2(-p0.x, -p0.y) + 3 * p1 - 3 * p2 + p3) * powf(t, 3) +
+			(2 * p0 - 5 * p1 + 4 * p2 - p3) * powf(t, 2) +
+			(Vector2(-p0.x, -p0.y) + p2) * t + 2 * p1
+			);
+	return pt;
+}
+
+Vector2 Mymath::Lerp(const Vector2& a, const Vector2& b, float t) {
+	return t * b + (1.0f - t) * a;
+}
+
+Vector2 Mymath::Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t) {
+	t = 0;
+	Vector2 p0p1 = Lerp(p0, p1, t);
+	Vector2 p1p2 = Lerp(p1, p2, t);
+	Vector2 p = Lerp(p0p1, p1p2, t);
+	return p;
 }
 
 // End Vector2
