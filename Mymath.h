@@ -47,6 +47,14 @@ namespace Mymath {
 	/// <param name="max">最大値</param>
 	/// <returns>丸められた値</returns>
 	float Clamp(float t, float min, float max);
+	/// <summary>
+	/// 値を丸める
+	/// </summary>
+	/// <param name="num">値</param>
+	/// <param name="min">最小値</param>
+	/// <param name="max">最大値</param>
+	/// <returns>丸められた値</returns>
+	int Clamp(int num, int min, int max);
 
 #pragma region Vector
 
