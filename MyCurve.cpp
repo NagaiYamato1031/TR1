@@ -464,7 +464,12 @@ void MyCurve::InterpCSpline() {
 		//interpPoint_.push_back(Mymath::CatmullRom(anchorPoint_[i - 3], anchorPoint_[i - 2], anchorPoint_[i - 1], anchorPoint_[i], 0.0f));
 		for (int j = 0; j <= interpolate_; j++) {
 			float t = static_cast<float>(j) / static_cast<float>(interpolate_);
-			interpPoint_.push_back(Mymath::CatmullRom(anchorPoint_[i - 3], anchorPoint_[i - 2], anchorPoint_[i - 1], anchorPoint_[i], t));
+			interpPoint_.push_back(
+				Mymath::CatmullRom(
+					anchorPoint_[i - 3], anchorPoint_[i - 2],
+					anchorPoint_[i - 1], anchorPoint_[i], t
+				)
+			);
 		}
 	}
 	//for (; three_next != anchorPoint_.end(); current++, next++, two_next++, three_next++) {
@@ -476,6 +481,7 @@ void MyCurve::InterpCSpline() {
 	//		interpPoint_.push_back(Mymath::CatmullRom(*current, *next, *two_next, *three_next, t));
 	//	}
 	//}
+	
 	// 終点
 	//interpPoint_.push_back(Mymath::CatmullRom(*current, *next, *two_next, *two_next, 0.0f));
 	for (int j = 0; j <= interpolate_; j++) {
