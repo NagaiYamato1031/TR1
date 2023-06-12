@@ -63,13 +63,13 @@ void SaveFileF(MyCurveManager& curveManager, const char* path) {
 		str += '\n';
 		file.write(str.c_str(), str.size());
 		//file.write(str.c_str(), str.size());
-		for (Vector2 ancher : curve.anchorPoint_) {
+		for (Vector2 anchor : curve.anchorPoint_) {
 			// AncherPoint
 			str = "AP,";
 			//str = "%.2f,%.2f\n", ancher.x, ancher.y;
-			str += std::to_string(ancher.x);
+			str += std::to_string(anchor.x);
 			str += ',';
-			str += std::to_string(ancher.y);
+			str += std::to_string(anchor.y);
 			str += '\n';
 
 			file.write(str.c_str(), str.size());
@@ -152,6 +152,8 @@ void LoadFileF(MyCurveManager& curveManager, const char* path) {
 
 	std::string line;
 	MyCurve curve;
+	curve.Initialize();
+	curve.anchorPoint_.clear();
 	// ファイルが終わるまで
 	while (std::getline(ss, line)) {
 		// ストリーム変換
@@ -195,6 +197,7 @@ void LoadFileF(MyCurveManager& curveManager, const char* path) {
 			curve.interpolate_ = std::atoi(word.c_str());
 			curveManager.AddCurve(curve);
 			curve.Initialize();
+			curve.anchorPoint_.clear();
 		}
 	}
 	curveManager.SetInterp();
@@ -308,7 +311,7 @@ void ImGuiTreeFunc(MyCurve& curve, const char* name) {
 		for (int i = 0; i < curve.anchorPoint_.size(); i++) {
 			char str[64];
 			if (i != curve.anchorPoint_.size()) {
-				sprintf_s(str, "L:%.2f , I:%d", curve.ancherLength_[i], i);
+				//sprintf_s(str, "L:%.2f , I:%d", curve.ancherLength_[i], i);
 			}
 			else {
 				sprintf_s(str, "I:%d", i);
@@ -512,6 +515,7 @@ MyCurveManager::~MyCurveManager() {
 
 void MyCurveManager::Initialize() {
 	curves_.clear();
+	resumeNumber = 0;
 }
 
 

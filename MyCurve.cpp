@@ -14,7 +14,7 @@ bool isDrawLine = true;
 
 void MyCurve::Initialize() {
 	startPositon_ = { 100.0f,100.0f };
-	ancherLength_.clear();
+	//ancherLength_.clear();
 	anchorPoint_.clear();
 	interpPoint_.clear();
 	interpolate_ = 8;
