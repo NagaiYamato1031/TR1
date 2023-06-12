@@ -19,338 +19,6 @@ const char kWindowTitle[] = "LE2A_12_ナガイ_ヤマト_TR1";
 const int kWindowWidth = 1280;
 const int kWindowHeight = 720;
 
-bool OpenFile(FILE*& fp, const char* path, const char* mode) {
-	errno_t errorCode = fopen_s(&fp, path, mode);
-	if (errorCode != 0) {
-		return false;
-	}
-	return true;
-}
-void SaveFileF(MyCurveManager& curveManager) {
-	std::ofstream file;
-	file.open("file.csv", std::ios::trunc);
-	if (!file.is_open()) {
-		return;
-	}
-
-	std::vector<MyCurve> curves = curveManager.GetCurves();
-	for (MyCurve curve : curves) {
-		std::string str = "SP,";
-		// StartPosition
-		//file.write(str.c_str(), str.size());
-		// StartPosition
-		//str = "%.2f,%.2f\n", curve.startPositon_.x, curve.startPositon_.y;
-		str += std::to_string(curve.startPositon_.x);
-		str += ',';
-		str += std::to_string(curve.startPositon_.y);
-		str += '\n';
-		file.write(str.c_str(), str.size());
-		//file.write(str.c_str(), str.size());
-		for (Vector2 ancher : curve.anchorPoint_) {
-			// AncherPoint
-			str = "AP,";
-			//str = "%.2f,%.2f\n", ancher.x, ancher.y;
-			str += std::to_string(ancher.x);
-			str += ',';
-			str += std::to_string(ancher.y);
-			str += '\n';
-
-			file.write(str.c_str(), str.size());
-		}
-		// 曲線の終わりの合図
-		str = "TYPE,";
-		switch (curve.type_)
-		{
-		case LineType::Straight:
-			str += "Straight";
-			break;
-		case LineType::CSpline:
-			str += "CSpline";
-			break;
-		case LineType::Bezier:
-			str += "Bezier";
-			break;
-		default:
-			str += "Straight";
-			break;
-		}
-		str += '\n';
-		file.write(str.c_str(), str.size());
-
-		str = "INTP,";
-		str += std::to_string(curve.interpolate_);
-		str += '\n';
-
-		file.write(str.c_str(), str.size());
-	}
-	file.close();
-}
-
-void SaveFile(MyCurveManager& curveManager) {
-	FILE* fp = nullptr;
-	if (!OpenFile(fp, "file.csv", "w")) {
-		return;
-	}
-	std::vector<MyCurve> curves = curveManager.GetCurves();
-	for (MyCurve curve : curves) {
-		std::string str = "SP,";
-		// StartPosition
-		//fprintf_s(fp, str.c_str());
-		// StartPosition
-		//str = "%.2f,%.2f\n", curve.startPositon_.x, curve.startPositon_.y;
-		str += std::to_string(curve.startPositon_.x);
-		str += ',';
-		str += std::to_string(curve.startPositon_.y);
-		str += '\n';
-		fprintf_s(fp, str.c_str());
-		//fprintf_s(fp, str.c_str());
-		for (Vector2 ancher : curve.anchorPoint_) {
-			//str = "%.2f,%.2f\n", ancher.x, ancher.y;
-			// AncherPoint
-			str = "AP,";
-			str += std::to_string(ancher.x);
-			str += ',';
-			str += std::to_string(ancher.y);
-			str += '\n';
-
-			fprintf_s(fp, str.c_str());
-		}
-
-	}
-	fclose(fp);
-}
-
-void LoadFileF(MyCurveManager& curveManager) {
-	std::stringstream ss;
-	std::ifstream file;
-	file.open("file.csv", std::ios::in);
-	if (!file.is_open()) {
-		return;
-	}
-	ss << file.rdbuf();
-	file.close();
-	curveManager.Initialize();
-
-	std::string line;
-	MyCurve curve;
-	// ファイルが終わるまで
-	while (std::getline(ss, line)) {
-		// ストリーム変換
-		std::stringstream line_stream(line);
-
-		std::string word;
-		// , 区切りで行の先頭文字列を取得
-		std::getline(line_stream, word, ',');
-
-		// StartPosition だったら
-		if (word.find("SP") == 0) {
-			std::getline(line_stream, word, ',');
-			float x = (float)std::atof(word.c_str());
-			std::getline(line_stream, word, ',');
-			float y = (float)std::atof(word.c_str());
-			curve.startPositon_ = Vector2(x, y);
-		}
-		// AncherPosition だったら
-		if (word.find("AP") == 0) {
-			std::getline(line_stream, word, ',');
-			float x = (float)std::atof(word.c_str());
-			std::getline(line_stream, word, ',');
-			float y = (float)std::atof(word.c_str());
-			curve.anchorPoint_.push_back(Vector2(x, y));
-		}
-		// 曲線の情報が終わったら
-		if (word.find("TYPE") == 0) {
-			std::getline(line_stream, word, ',');
-			if (word.find("Straight") == 0) {
-				curve.type_ = LineType::Straight;
-			}
-			else if (word.find("CSpline") == 0) {
-				curve.type_ = LineType::CSpline;
-			}
-			else if (word.find("Bezier") == 0) {
-				curve.type_ = LineType::Bezier;
-			}
-		}
-		if (word.find("INTP") == 0) {
-			std::getline(line_stream, word, ',');
-			curve.interpolate_ = std::atoi(word.c_str());
-			curveManager.AddCurve(curve);
-			curve.Initialize();
-		}
-	}
-	curveManager.SetInterp();
-}
-
-void LoadFile(MyCurveManager& curveManager) {
-	FILE* fp = nullptr;
-	if (!OpenFile(fp, "file.csv", "r")) {
-		return;
-	}
-	curveManager.Initialize();
-	std::string str;
-	//fgets(str.c_str(), 256, fp);
-
-	fclose(fp);
-}
-
-void ImGuiMenuFunc(MyCurveManager& curveManager) {
-	if (ImGui::BeginMenuBar()) {
-		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Save")) {
-				SaveFileF(curveManager);
-			}
-			if (ImGui::MenuItem("Load")) {
-				LoadFileF(curveManager);
-			}
-			ImGui::EndMenu();
-		}
-		ImGui::EndMenuBar();
-	}
-}
-
-void ImGuiTreeFunc(MyCurve& curve, const char* name) {
-	if (ImGui::TreeNode(name)) {
-		if (ImGui::RadioButton("Straight", curve.type_ == LineType::Straight)) {
-			curve.type_ = LineType::Straight;
-		}
-		ImGui::SameLine();
-		if (ImGui::RadioButton("CSpline", curve.type_ == LineType::CSpline)) {
-			curve.type_ = LineType::CSpline;
-		}
-		ImGui::SameLine();
-		if (ImGui::RadioButton("Bezier", curve.type_ == LineType::Bezier)) {
-			curve.type_ = LineType::Bezier;
-		}
-
-		ImGui::SliderInt("interpolate", &curve.interpolate_, 1, MyCurve::kMaxInterPolation);
-
-
-		ImGui::BeginChild(ImGui::GetID((void*)0), ImVec2(0, 0), ImGuiWindowFlags_NoTitleBar);
-		for (int i = 0; i < curve.anchorPoint_.size(); i++) {
-			char str[64];
-			if (i != curve.anchorPoint_.size()) {
-				sprintf_s(str, "L:%.2f , I:%d", curve.ancherLength_[i], i);
-			}
-			else {
-				sprintf_s(str, "I:%d", i);
-			}
-			ImGui::DragFloat2(str, &curve.anchorPoint_[i].x, 1.0f);
-		}
-		ImGui::EndChild();
-
-
-		std::string items = "";
-		for (int i = 0; i < curve.anchorPoint_.size(); i++) {
-			items += std::to_string(i);
-			items += '\0';
-		}
-		items += '\0';
-		ImGui::Combo("SelectAdd", &curve.addNumber, items.c_str());
-		// 変更されたかどうか
-		bool isChanged = false;
-		if (ImGui::Button("Add")) {
-			curve.AddAncher(curve.addNumber);
-			curve.addNumber++;
-			isChanged = true;
-		}
-		ImGui::Combo("SelectResume", &curve.resumeNumber, items.c_str());
-		if (ImGui::Button("Resume")) {
-			curve.ResumeAncher(curve.resumeNumber);
-			isChanged = true;
-			if (curve.resumeNumber != 0) {
-				curve.resumeNumber--;
-			}
-		}
-		if (isChanged) {
-			curve.addNumber = Mymath::Clamp(curve.addNumber, 0, (int)curve.anchorPoint_.size() - 1);
-		}
-
-		ImGui::TreePop();
-	}
-}
-
-void ImGuiTreeFunc(MyCurveManager& curveManager) {
-	int num = 0;
-	std::vector<MyCurve>& curves = curveManager.GetCurves();
-	for (MyCurve& curve : curves) {
-		num++;
-		std::string name = "curve";
-		name += std::to_string(num);
-		if (ImGui::TreeNode(name.c_str())) {
-			ImGui::DragFloat2("StartPosition", &curve.startPositon_.x, 1.0f);
-
-			if (ImGui::RadioButton("Straight", curve.type_ == LineType::Straight)) {
-				curve.type_ = LineType::Straight;
-				ImGui::TreePop();
-				return;
-			}
-			ImGui::SameLine();
-			if (ImGui::RadioButton("CSpline", curve.type_ == LineType::CSpline)) {
-				curve.type_ = LineType::CSpline;
-				ImGui::TreePop();
-				return;
-			}
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Bezier", curve.type_ == LineType::Bezier)) {
-				curve.type_ = LineType::Bezier;
-				ImGui::TreePop();
-				return;
-			}
-
-			ImGui::SliderInt("interpolate", &curve.interpolate_, 1, MyCurve::kMaxInterPolation);
-			static float t = 0;
-			int radius = 15;
-			static Vector2 vec{ 0,0 };
-			ImGui::SliderFloat("t", &t, 0.0f, 1.0f);
-			vec = curve.GetValueT(t);
-			ImGui::Text("%.2f,%.2f", vec.x, vec.y);
-			Novice::DrawBox(int(vec.x - radius), int(vec.y - radius), radius * 2, radius * 2, 0.0f, 0x00FFFFFFFF, kFillModeSolid);
-
-			ImGui::BeginChild(ImGui::GetID((void*)0), ImVec2(0, 0), ImGuiWindowFlags_NoTitleBar);
-			for (int i = 0; i < curve.anchorPoint_.size(); i++) {
-				char str[64];
-				sprintf_s(str, "I:%d", i);
-				ImGui::DragFloat2(str, &curve.anchorPoint_[i].x, 1.0f);
-				/*if (curve.type_ != LineType::Bezier && i != curve.anchorPoint_.size()) {
-					sprintf_s(str, "L:%.2f", curve.ancherLength_[i]);
-				}*/
-				ImGui::SameLine();
-				ImGui::Text(str);
-			}
-			ImGui::EndChild();
-
-
-			std::string items = "";
-			for (int i = 0; i < curve.anchorPoint_.size(); i++) {
-				items += std::to_string(i);
-				items += '\0';
-			}
-			items += '\0';
-			ImGui::Combo("SelectAdd", &curve.addNumber, items.c_str());
-			// 変更されたかどうか
-			bool isChanged = false;
-			if (ImGui::Button("Add")) {
-				curve.AddAncher(curve.addNumber);
-				curve.addNumber++;
-				isChanged = true;
-			}
-			ImGui::Combo("SelectResume", &curve.resumeNumber, items.c_str());
-			if (ImGui::Button("Resume")) {
-				curve.ResumeAncher(curve.resumeNumber);
-				isChanged = true;
-				if (curve.resumeNumber != 0) {
-					curve.resumeNumber--;
-				}
-			}
-			if (isChanged) {
-				curve.addNumber = Mymath::Clamp(curve.addNumber, 0, (int)curve.anchorPoint_.size() - 1);
-			}
-
-			ImGui::TreePop();
-		}
-	}
-}
-
 
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -373,6 +41,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	straight.startPositon_ = { 100,150 };
 	straight.type_ = LineType::Straight;
 	straight.interpolate_ = 4;
+	straight.anchorPoint_.clear();
 	straight.anchorPoint_.push_back({ 0,0 });
 	straight.anchorPoint_.push_back({ 100,50 });
 	straight.anchorPoint_.push_back({ 200,-50 });
@@ -382,12 +51,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	curveManager.AddCurve(straight);
 
+#ifdef DEBUG
+
+
+
 	MyCurve cSpline;
 	cSpline.Initialize();
 
 	cSpline.startPositon_ = { 100,350 };
 	cSpline.type_ = LineType::CSpline;
 	cSpline.interpolate_ = 8;
+	cSpline.anchorPoint_.clear();
 	cSpline.anchorPoint_.push_back({ 0,0 });
 	cSpline.anchorPoint_.push_back({ 100,50 });
 	cSpline.anchorPoint_.push_back({ 200,-50 });
@@ -403,6 +77,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bezier.startPositon_ = { 100,550 };
 	bezier.type_ = LineType::Bezier;
 	bezier.interpolate_ = 32;
+	bezier.anchorPoint_.clear();
 	bezier.anchorPoint_.push_back({ 0,0 });
 	bezier.anchorPoint_.push_back({ 100,50 });
 	bezier.anchorPoint_.push_back({ 200,-50 });
@@ -418,11 +93,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	MyCurve bezierToCSpline;
 	bezierToCSpline.Initialize();
+	bezierToCSpline.anchorPoint_.clear();
 	bezierToCSpline = bezier.ConvertCSpline(ConvertCSplineInterp);
 	bezierToCSpline.interpolate_ = 4;
 	bezierToCSpline.startPositon_ = { 700.0f,550.0f };
 
 	curveManager.AddCurve(bezierToCSpline);
+
+#endif // DEBUG
 
 #pragma endregion
 
@@ -437,19 +115,38 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma endregion
 
-	//// ファイル読み込み、書き込み
-	//std::stringstream bufferStream;
-	//std::ifstream file;
-	//file.open("file.txt");
-	//assert(file.is_open());
-
-	//// ファイルの内容を文字列ストリームにコピー
-	//bufferStream << file.rdbuf();
-
-	//// ファイルを閉じる
-	//file.close();
-
 	curveManager.SetInterp();
+
+#pragma region 実用化用の変数達
+
+	bool isActive = false;
+	bool canActive = true;
+	int	useIndex = 0;
+
+	float t = 0.0f;
+	float variation = 0.005f;
+
+	// 四角の色を変えてく
+	const uint32_t kMaxColor = 0xFF;
+	uint32_t boxXAlphaColor = 0xFF;
+	uint32_t boxYAlphaColor = 0xFF;
+
+	Vector2 boxPosition0{ 100,600 };
+	Vector2 boxPosition1{ 250,600 };
+	Vector2 boxPosition2{ 400,600 };
+	Vector2 boxPosition3{ 550,600 };
+	Vector2 boxSize{ 50,50 };
+	Vector2 boxChangedSize{ 50,50 };
+
+	Vector2 maxValue{ 1,1 };
+	Vector2 minValue{ 0,0 };
+	Vector2 value{ 0,0 };
+	Vector2 normalizeValue{ 0,0 };
+	Vector2 changedT = { 0,0 };
+
+#pragma endregion
+
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -474,59 +171,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		ImGui::End();
 
+		curveManager.ImGuiControls();
 
-		ImGui::Begin("LineControll", nullptr, ImGuiWindowFlags_MenuBar);
+		ImGui::Begin("Example");
 
-		ImGuiMenuFunc(curveManager);
+		ImGui::Checkbox("isActive", &isActive);
 
-		ImGui::Checkbox("AnchorDraw", &isDrawControl);
-		ImGui::Checkbox("InterpDraw", &isDrawInterp);
+		std::string items = "";
+		std::vector<MyCurve> curves = curveManager.GetCurves();
+		for (MyCurve curve : curves) {
+			for (int i = 0; i < curves.size(); i++) {
+				items += std::to_string(i);
+				items += '\0';
+			}
+			items += '\0';
+		}
+		ImGui::Combo("useIndex", &useIndex, items.c_str());
 
-		ImGuiTreeFunc(curveManager);
-
-		//
-		//		ImGuiTreeFunc(straight, "straight");
-		//		ImGuiTreeFunc(cSpline, "cspline");
-		//#pragma region Bezier
-		//		if (ImGui::TreeNode("bezier")) {
-		//			if (ImGui::RadioButton("Straight", bezier.type_ == LineType::Straight)) {
-		//				bezier.type_ = LineType::Straight;
-		//			}
-		//			ImGui::SameLine();
-		//			if (ImGui::RadioButton("CSpline", bezier.type_ == LineType::CSpline)) {
-		//				bezier.type_ = LineType::CSpline;
-		//			}
-		//			ImGui::SameLine();
-		//			if (ImGui::RadioButton("Bezier", bezier.type_ == LineType::Bezier)) {
-		//				bezier.type_ = LineType::Bezier;
-		//			}
-		//
-		//			ImGui::SliderInt("interpolate", &bezier.interpolate_, 1, MyCurve::kMaxInterPolation);
-		//			ImGui::SliderInt("ConvertInterp", &ConvertCSplineInterp, 1, 16);
-		//
-		//
-		//			ImGui::BeginChild(ImGui::GetID((void*)0), ImVec2(300, 150), ImGuiWindowFlags_NoTitleBar);
-		//			for (int i = 0; i < bezier.anchorPoint_.size(); i++) {
-		//				char str[16];
-		//				sprintf_s(str, "Index:%d", i);
-		//				ImGui::DragFloat2(str, &bezier.anchorPoint_[i].x, 1.0f);
-		//			}
-		//			ImGui::EndChild();
-		//			ImGui::TreePop();
-		//		}
-		//#pragma endregion
-		//		ImGuiTreeFunc(test, "test");
-
-		ImGui::End();
+		ImGui::SliderFloat("t", &t, 0.0f, 1.0f);
+		ImGui::SliderFloat("variation", &variation, 0.001f, 0.01f);
 
 #pragma endregion
 
-		if (preKeys[DIK_C] == 0 && keys[DIK_C] != 0) {
-			isDrawControl = !isDrawControl;
-		}
-		if (preKeys[DIK_I] == 0 && keys[DIK_I] != 0) {
-			isDrawInterp = !isDrawInterp;
-		}
+		//if (preKeys[DIK_C] == 0 && keys[DIK_C] != 0) {
+		//	isDrawControl = !isDrawControl;
+		//}
+		//if (preKeys[DIK_I] == 0 && keys[DIK_I] != 0) {
+		//	isDrawInterp = !isDrawInterp;
+		//}
 
 		curveManager.SetInterp();
 		///straight.SetInterp();
@@ -537,6 +209,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//bezierToCSpline.startPositon_ = { 700.0f,550.0f };
 		//bezierToCSpline.SetInterp();
 		//test.SetInterp();
+		if (useIndex < 0 || curveManager.curves_.size() < 1) {
+			canActive = false;
+			isActive = false;
+		}
+		else {
+			canActive = true;
+		}
+		if (canActive) {
+			if (isActive) {
+				t += variation;
+				if (1.0f < t) {
+					t = 0.0f;
+				}
+			}
+			maxValue = curveManager.curves_[useIndex].GetMax();
+			minValue = curveManager.curves_[useIndex].GetMin();
+
+			value = curveManager.curves_[useIndex].GetValueT(t);
+			normalizeValue.x = (value.x - minValue.x) / (maxValue.x - minValue.x);
+			// スクリーン座標だから逆にしたい感はある
+			normalizeValue.y = (value.y - minValue.y) / (maxValue.y - minValue.y);
+			changedT.x = max(0, min(normalizeValue.x, 1));
+			//changedT.y = Mymath::Clamp(changedT.y, 0.0f, 1.0f);
+			changedT.y = normalizeValue.y;
+		}
+		ImGui::Text("maxValue : %.02f , %0.2f", maxValue.x, maxValue.y);
+		ImGui::Text("minValue : %.02f , %0.2f", minValue.x, minValue.y);
+		ImGui::Text("chandedT : %.02f , %0.2f", changedT.x, changedT.y);
+
+		ImGui::End();
 
 		///
 		/// ↑更新処理ここまで
@@ -546,17 +248,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		Novice::ScreenPrintf(10, 60, "Straight");
+		//Novice::ScreenPrintf(10, 60, "Straight");
 		//straight.Draw();
-		Novice::ScreenPrintf(10, 260, "Catmull-rom-Spline");
+		//Novice::ScreenPrintf(10, 260, "Catmull-rom-Spline");
 		//cSpline.Draw();
-		Novice::ScreenPrintf(10, 460, "Bezier");
+		//Novice::ScreenPrintf(10, 460, "Bezier");
 		//bezier.Draw();
-		Novice::ScreenPrintf(700, 460, "ConvertCSpline");
+		//Novice::ScreenPrintf(700, 460, "ConvertCSpline");
 		//bezierToCSpline.Draw();
 		//test.Draw();
+
 		curveManager.Draw();
 
+		static Vector2 pos{ 0,0 };
+		float radius = 10;
+		radius;
+		if (canActive) {
+			boxXAlphaColor = (uint32_t)(kMaxColor * changedT.x);
+			boxYAlphaColor = (uint32_t)(kMaxColor * changedT.y);
+
+			boxChangedSize.x = boxSize.x + boxSize.x * changedT.x;
+			boxChangedSize.y = boxSize.y + boxSize.y * changedT.y;
+
+			pos = curveManager.curves_[useIndex].startPositon_;
+
+			pos.x += value.x;
+			pos.y -= value.y;
+		}
+		int padd = 50;
+		// 線上の値
+		Novice::DrawBox(int(pos.x - radius), int(pos.y - radius), (int)radius * 2, (int)radius * 2, 0.0f, 0x00FFFFFFFF, kFillModeSolid);
+
+
+		Novice::ScreenPrintf((int)boxPosition0.x - padd, (int)boxPosition0.y - padd, "No Change");
+		Novice::DrawBox(int(boxPosition0.x - boxSize.x / 2), int(boxPosition0.y - boxSize.y / 2), (int)boxSize.x, (int)boxSize.y, 0.0f, 0xFFFFFFFF, kFillModeSolid);
+		Novice::ScreenPrintf((int)boxPosition1.x - padd, (int)boxPosition1.y - padd, "Alpha to tX");
+		Novice::DrawBox(int(boxPosition1.x - boxSize.x / 2), int(boxPosition1.y - boxSize.y / 2), (int)boxSize.x, (int)boxSize.y, 0.0f, 0xFFFFFF00 + boxXAlphaColor, kFillModeSolid);
+		Novice::ScreenPrintf((int)boxPosition2.x - padd, (int)boxPosition2.y - padd, "Alpha to tY");
+		Novice::DrawBox(int(boxPosition2.x - boxSize.x / 2), int(boxPosition2.y - boxSize.y / 2), (int)boxSize.x, (int)boxSize.y, 0.0f, 0xFFFFFF00 + boxYAlphaColor, kFillModeSolid);
+		Novice::ScreenPrintf((int)boxPosition3.x - padd, (int)boxPosition3.y - padd - 20, "Scale to tX , tY");
+		Novice::DrawBox(int(boxPosition3.x - boxChangedSize.x / 2), int(boxPosition3.y - boxChangedSize.y / 2), (int)boxChangedSize.x, (int)boxChangedSize.y, 0.0f, 0xFFFFFFFF, kFillModeSolid);
+
+		//ImGui::Text("color : %X , %X", boxXAlphaColor, boxYAlphaColor);
 
 		///
 		/// ↑描画処理ここまで

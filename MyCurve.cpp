@@ -10,15 +10,20 @@
 
 bool isDrawControl = true;
 bool isDrawInterp = true;
+bool isDrawLine = true;
 
 void MyCurve::Initialize() {
-	startPositon_ = { 0.0f,0.0f };
+	startPositon_ = { 100.0f,100.0f };
 	ancherLength_.clear();
 	anchorPoint_.clear();
 	interpPoint_.clear();
 	interpolate_ = 8;
 	type_ = LineType::Straight;
 	curveLength_ = 0;
+
+	anchorPoint_.push_back({ 0,0 });
+	anchorPoint_.push_back({ 100,0 });
+
 }
 
 void MyCurve::SetInterp() {
@@ -94,16 +99,16 @@ void MyCurve::Draw() {
 		int radius = 10;
 		// 制御点を描画する
 		for (Vector2 p : anchorPoint_) {
-			//Novice::DrawBox(int(p.x + startPositon_.x - radius), int(-p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, RED, kFillModeSolid);
-			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, RED, kFillModeSolid);
+			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(-p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, RED, kFillModeSolid);
+			//Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, RED, kFillModeSolid);
 		}
 	}
 	if (isDrawInterp) {
 		int radius = 5;
 		// 補間点を描画する
 		for (Vector2 p : interpPoint_) {
-			//Novice::DrawBox(int(p.x + startPositon_.x - radius), int(-p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, 0x00FF0077, kFillModeSolid);
-			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, 0x00FF0077, kFillModeSolid);
+			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(-p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, 0x00FF0077, kFillModeSolid);
+			//Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, 0x00FF0077, kFillModeSolid);
 		}
 	}
 
@@ -114,9 +119,11 @@ void MyCurve::Draw() {
 	// 次の点に移動させる
 	//next++;
 	// ここから描画
-	for (int i = 1; i < interpPoint_.size(); i++) {
-		//Novice::DrawLine(int(interpPoint_[i - 1].x + startPositon_.x), int(-interpPoint_[i - 1].y + startPositon_.y), int(interpPoint_[i].x + startPositon_.x), int(-interpPoint_[i].y + startPositon_.y), WHITE);
-		Novice::DrawLine(int(interpPoint_[i - 1].x + startPositon_.x), int(interpPoint_[i - 1].y + startPositon_.y), int(interpPoint_[i].x + startPositon_.x), int(interpPoint_[i].y + startPositon_.y), WHITE);
+	if (isDrawLine) {
+		for (int i = 1; i < interpPoint_.size(); i++) {
+			Novice::DrawLine(int(interpPoint_[i - 1].x + startPositon_.x), int(-interpPoint_[i - 1].y + startPositon_.y), int(interpPoint_[i].x + startPositon_.x), int(-interpPoint_[i].y + startPositon_.y), WHITE);
+			//Novice::DrawLine(int(interpPoint_[i - 1].x + startPositon_.x), int(interpPoint_[i - 1].y + startPositon_.y), int(interpPoint_[i].x + startPositon_.x), int(interpPoint_[i].y + startPositon_.y), WHITE);
+		}
 	}
 	/*for (; next != interpPoint_.end(); current++, next++) {
 		Novice::DrawLine(int(current->x + startPositon_.x), int(current->y + startPositon_.y), int(next->x + startPositon_.x), int(next->y + startPositon_.y), WHITE);
@@ -149,8 +156,8 @@ void MyCurve::Draw() {
 
 MyCurve MyCurve::ConvertCSpline(int interpolate = 8) {
 	// 変換後の曲線
-	MyCurve resurt;
-	resurt.type_ = LineType::CSpline;
+	MyCurve result;
+	result.type_ = LineType::CSpline;
 	interpolate = Mymath::Clamp(interpolate, 1, (int)interpPoint_.size() - 1);
 	//interpolate = (int)Mymath::Clamp((float)interpolate, 1.0f, (float)kMaxInterPolation);
 	// 補間数分計算する
@@ -181,13 +188,14 @@ MyCurve MyCurve::ConvertCSpline(int interpolate = 8) {
 	//	resurt.anchorPoint_.push_back(Mymath::Lerp(parameters.front(), parameters.back(), t));
 	//}
 	// 分割数に合わせて曲線を分割
+	result.startPositon_ = startPositon_;
 	for (int i = 0; i < interpolate; i++) {
 		float t = i / (float)interpolate;
-		resurt.anchorPoint_.push_back(GetValueNearTPoint(t));
+		result.anchorPoint_.push_back(GetValueT(t));
 	}
-	resurt.anchorPoint_.push_back(GetValueNearTPoint(1.0f));
-	resurt.SetInterp();
-	return resurt;
+	result.anchorPoint_.push_back(GetValueT(1.0f));
+	result.SetInterp();
+	return result;
 }
 
 
@@ -215,7 +223,8 @@ Vector2 MyCurve::GetValueT(float t) {
 		float endT = GetInterpLength(1) / curveLength_;
 		// 始まりと終わりの間での t の値を取り出す
 		float midT = (t - startT) / (endT - startT);
-		Vector2 result = startPositon_ + interpPoint_[0] + Mymath::Lerp({ 0,0 }, interpPoint_[1], midT);
+		//Vector2 result = startPositon_ + interpPoint_[0] + Mymath::Lerp({ 0,0 }, interpPoint_[1], midT);
+		Vector2 result = interpPoint_[0] + Mymath::Lerp({ 0,0 }, interpPoint_[1], midT);
 		return result;
 	}
 	else if (interpLength_.back() <= t) {
@@ -224,7 +233,8 @@ Vector2 MyCurve::GetValueT(float t) {
 		float endT = GetInterpLength(index) / curveLength_;
 		// 始まりと終わりの間での t の値を取り出す
 		float midT = (t - startT) / (endT - startT);
-		Vector2 result = startPositon_ + interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+		//Vector2 result = startPositon_ + interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+		Vector2 result = interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
 		return result;
 		//return startPositon_ + interpPoint_.back();
 	}
@@ -246,10 +256,40 @@ Vector2 MyCurve::GetValueT(float t) {
 	float endT = GetInterpLength(index) / curveLength_;
 	// 始まりと終わりの間での t の値を取り出す
 	float midT = (t - startT) / (endT - startT);
-	Vector2 result = startPositon_ + interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+	// 画面上の値を返す
+	//Vector2 result = startPositon_ + interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+	// 0 を原点とした値を変えす
+	Vector2 result = interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
 
 	return result;
 }
+
+Vector2 MyCurve::GetMax() {
+	Vector2 max{ 0,0 };
+	for (Vector2 value : interpPoint_) {
+		if (max.x < value.x) {
+			max.x = value.x;
+		}
+		if (max.y < value.y) {
+			max.y = value.y;
+		}
+	}
+	return max;
+}
+
+Vector2 MyCurve::GetMin() {
+	Vector2 min{ 0,0 };
+	for (Vector2 value : interpPoint_) {
+		if (value.x < min.x) {
+			min.x = value.x;
+		}
+		if (value.y < min.y) {
+			min.y = value.y;
+		}
+	}
+	return min;
+}
+
 
 void MyCurve::SetLengthAll() {
 	// 一区間の長さ

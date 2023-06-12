@@ -13,6 +13,8 @@ enum class LineType {
 extern bool isDrawControl;
 // 補間点を描画するか
 extern bool isDrawInterp;
+// 線を描画するか
+extern bool isDrawLine;
 
 class MyCurve
 {
@@ -62,6 +64,10 @@ public:
 	/// <param name="t">0 ～ 1</param>
 	/// <returns>全体の中での t の値</returns>
 	Vector2 GetValueT(float t);
+
+
+	Vector2 GetMax();
+	Vector2 GetMin();
 
 	/// <summary>
 	/// 曲線全体の長さを求める
