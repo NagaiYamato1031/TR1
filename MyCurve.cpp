@@ -10,9 +10,20 @@
 
 bool isDrawControl = true;
 bool isDrawInterp = true;
+bool isDrawLine = true;
 
 void MyCurve::Initialize() {
-	startPositon_ = { 0.0f,0.0f };
+	startPositon_ = { 100.0f,100.0f };
+	ancherLength_.clear();
+	anchorPoint_.clear();
+	interpPoint_.clear();
+	interpolate_ = 8;
+	type_ = LineType::Straight;
+	curveLength_ = 0;
+
+	anchorPoint_.push_back({ 0,0 });
+	anchorPoint_.push_back({ 100,0 });
+
 }
 
 void MyCurve::SetInterp() {
@@ -46,6 +57,7 @@ void MyCurve::SetInterp() {
 	default:
 		break;
 	}
+	SetLengthAll();
 }
 void MyCurve::SetInterp(LineType type) {
 
@@ -84,15 +96,19 @@ void MyCurve::Draw() {
 	}
 
 	if (isDrawControl) {
+		int radius = 10;
 		// 制御点を描画する
 		for (Vector2 p : anchorPoint_) {
-			Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 10, 10, 0.0f, RED, kFillModeSolid);
+			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(-p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, RED, kFillModeSolid);
+			//Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, RED, kFillModeSolid);
 		}
 	}
 	if (isDrawInterp) {
+		int radius = 5;
 		// 補間点を描画する
 		for (Vector2 p : interpPoint_) {
-			Novice::DrawEllipse(int(p.x + startPositon_.x), int(p.y + startPositon_.y), 5, 5, 0.0f, 0x00FF0077, kFillModeSolid);
+			Novice::DrawBox(int(p.x + startPositon_.x - radius), int(-p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, 0x00FF0077, kFillModeSolid);
+			//Novice::DrawBox(int(p.x + startPositon_.x - radius), int(p.y + startPositon_.y - radius), radius * 2, radius * 2, 0.0f, 0x00FF0077, kFillModeSolid);
 		}
 	}
 
@@ -103,8 +119,11 @@ void MyCurve::Draw() {
 	// 次の点に移動させる
 	//next++;
 	// ここから描画
-	for (int i = 1; i < interpPoint_.size(); i++) {
-		Novice::DrawLine(int(interpPoint_[i - 1].x + startPositon_.x), int(interpPoint_[i - 1].y + startPositon_.y), int(interpPoint_[i].x + startPositon_.x), int(interpPoint_[i].y + startPositon_.y), WHITE);
+	if (isDrawLine) {
+		for (int i = 1; i < interpPoint_.size(); i++) {
+			Novice::DrawLine(int(interpPoint_[i - 1].x + startPositon_.x), int(-interpPoint_[i - 1].y + startPositon_.y), int(interpPoint_[i].x + startPositon_.x), int(-interpPoint_[i].y + startPositon_.y), WHITE);
+			//Novice::DrawLine(int(interpPoint_[i - 1].x + startPositon_.x), int(interpPoint_[i - 1].y + startPositon_.y), int(interpPoint_[i].x + startPositon_.x), int(interpPoint_[i].y + startPositon_.y), WHITE);
+		}
 	}
 	/*for (; next != interpPoint_.end(); current++, next++) {
 		Novice::DrawLine(int(current->x + startPositon_.x), int(current->y + startPositon_.y), int(next->x + startPositon_.x), int(next->y + startPositon_.y), WHITE);
@@ -137,21 +156,50 @@ void MyCurve::Draw() {
 
 MyCurve MyCurve::ConvertCSpline(int interpolate = 8) {
 	// 変換後の曲線
-	MyCurve resurt;
-	resurt.type_ = LineType::CSpline;
-	interpolate = (int)Mymath::Clamp((float)interpolate, 1.0f, (float)interpPoint_.size() - 1);
+	MyCurve result;
+	result.type_ = LineType::CSpline;
+	interpolate = Mymath::Clamp(interpolate, 1, (int)interpPoint_.size() - 1);
+	//interpolate = (int)Mymath::Clamp((float)interpolate, 1.0f, (float)kMaxInterPolation);
+	// 補間数分計算する
+	//for (int i = 0; i <= interpolate; i++) {
+	//	float t = static_cast<float>(i) / static_cast<float>(interpolate);
+	//	// 補間するための中間点
+	//	std::vector<Vector2> preParameters = anchorPoint_;
+	//	// 補間した後の中間点
+	//	std::vector<Vector2> parameters;
+	//	// 一つの線になるまで中間点を作る
+	//	for (;;) {
+	//		// 最初から最後まで線形補間させる
+	//		for (int j = 1; j < preParameters.size(); j++) {
+	//			parameters.push_back(Mymath::Lerp(preParameters[j - 1], preParameters[j], t));
+	//		}
+	//		// 線が 1 本だけ描けるようになったら終了
+	//		if (parameters.size() == 2) {
+	//			break;
+	//		}
+	//		// 点が 3 個以上あるなら続ける
+	//		else {
+	//			// リストを更新する
+	//			preParameters = parameters;
+	//			// 使わないので初期化
+	//			parameters.clear();
+	//		}
+	//	}
+	//	resurt.anchorPoint_.push_back(Mymath::Lerp(parameters.front(), parameters.back(), t));
+	//}
 	// 分割数に合わせて曲線を分割
+	result.startPositon_ = startPositon_;
 	for (int i = 0; i < interpolate; i++) {
 		float t = i / (float)interpolate;
-		resurt.anchorPoint_.push_back(GetValueT(t));
+		result.anchorPoint_.push_back(GetValueT(t));
 	}
-	resurt.anchorPoint_.push_back(GetValueT(1.0f));
-	resurt.SetInterp();
-	return resurt;
+	result.anchorPoint_.push_back(GetValueT(1.0f));
+	result.SetInterp();
+	return result;
 }
 
 
-Vector2 MyCurve::GetValueT(float t) {
+Vector2 MyCurve::GetValueNearTPoint(float t) {
 	// 値を丸める
 	t = Mymath::Clamp(t, 0.0f, 1.0f);
 	// 補間点の最大数を取り出す
@@ -166,6 +214,113 @@ Vector2 MyCurve::GetValueT(float t) {
 	return interpPoint_[nearIndex];
 }
 
+Vector2 MyCurve::GetValueT(float t) {
+	// t が 0 または 1 なら
+	if (t <= interpLength_.front()) {
+		//return startPositon_ + anchorPoint_[0];
+		// 区間の始まりと終わりを t 表記で取り出してみる
+		float startT = GetInterpLength(0) / curveLength_;
+		float endT = GetInterpLength(1) / curveLength_;
+		// 始まりと終わりの間での t の値を取り出す
+		float midT = (t - startT) / (endT - startT);
+		//Vector2 result = startPositon_ + interpPoint_[0] + Mymath::Lerp({ 0,0 }, interpPoint_[1], midT);
+		Vector2 result = interpPoint_[0] + Mymath::Lerp({ 0,0 }, interpPoint_[1], midT);
+		return result;
+	}
+	else if (interpLength_.back() <= t) {
+		int index = (int)interpPoint_.size() - 1;
+		float startT = GetInterpLength(index - 1) / curveLength_;
+		float endT = GetInterpLength(index) / curveLength_;
+		// 始まりと終わりの間での t の値を取り出す
+		float midT = (t - startT) / (endT - startT);
+		//Vector2 result = startPositon_ + interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+		Vector2 result = interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+		return result;
+		//return startPositon_ + interpPoint_.back();
+	}
+
+	// 補間点単位で長さを割り出す
+	int index = 0;
+	float lengthAll = 0;
+	for (float length : interpLength_) {
+		lengthAll += length;
+		// 最後の値(最大の長さ)を取り出す
+		if (t * curveLength_ <= lengthAll) {
+			break;
+		}
+		index++;
+	}
+	// 補間点で区切られてる区間がわかったので、そこから t の値で取り出す
+	// 区間の始まりと終わりを t 表記で取り出してみる
+	float startT = GetInterpLength(index - 1) / curveLength_;
+	float endT = GetInterpLength(index) / curveLength_;
+	// 始まりと終わりの間での t の値を取り出す
+	float midT = (t - startT) / (endT - startT);
+	// 画面上の値を返す
+	//Vector2 result = startPositon_ + interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+	// 0 を原点とした値を変えす
+	Vector2 result = interpPoint_[index - 1] + Mymath::Lerp({ 0,0 }, interpPoint_[index] - interpPoint_[index - 1], midT);
+
+	return result;
+}
+
+Vector2 MyCurve::GetMax() {
+	Vector2 max{ 0,0 };
+	for (Vector2 value : interpPoint_) {
+		if (max.x < value.x) {
+			max.x = value.x;
+		}
+		if (max.y < value.y) {
+			max.y = value.y;
+		}
+	}
+	return max;
+}
+
+Vector2 MyCurve::GetMin() {
+	Vector2 min{ 0,0 };
+	for (Vector2 value : interpPoint_) {
+		if (value.x < min.x) {
+			min.x = value.x;
+		}
+		if (value.y < min.y) {
+			min.y = value.y;
+		}
+	}
+	return min;
+}
+
+
+void MyCurve::SetLengthAll() {
+	// 一区間の長さ
+	//float length = 0;
+	curveLength_ = 0;
+	//ancherLength_.clear();
+	//ancherLength_.push_back(0);
+	interpLength_.clear();
+	interpLength_.push_back(0);
+	// 補間点すべて
+	//int ancher = 1;
+	for (int i = 1; i < interpPoint_.size(); i++) {
+		// ベジェ曲線の時の対処を書く
+
+		// 次の補間点までの距離を求める
+		//length += Mymath::Length(interpPoint_[i] - interpPoint_[i - 1]);
+		interpLength_.push_back(Mymath::Length(interpPoint_[i] - interpPoint_[i - 1]));
+		curveLength_ += Mymath::Length(interpPoint_[i] - interpPoint_[i - 1]);
+
+		// 補間点と制御点が同じなら
+		//if (anchorPoint_[ancher].x == interpPoint_[i].x && anchorPoint_[ancher].y == interpPoint_[i].y) {
+		//	ancherLength_.push_back(length);
+		//	curveLength_ += length;
+		//	// 一つの区間の計算を終わらせる
+		//	length = 0;
+		//	ancher++;
+		//}
+	}
+	//ancherLength_.erase(ancherLength_.begin());
+}
+
 bool MyCurve::CheckElements() {
 	// 点が 2 以下の場合線を描けない
 	if (anchorPoint_.size() < 2) {
@@ -176,6 +331,41 @@ bool MyCurve::CheckElements() {
 	}
 	// 点が 2 つ以上あるので線が描ける
 	return true;
+}
+
+
+void MyCurve::ResumeAncher(int index) {
+	if (anchorPoint_.size() == 2) {
+		return;
+	}
+	anchorPoint_.erase(anchorPoint_.begin() + index);
+}
+
+void MyCurve::AddAncher() {
+	Vector2 temp = *(anchorPoint_.end() - 1);
+	temp.x += 20;
+	temp.y += 20;
+	anchorPoint_.push_back(temp);
+}
+
+void MyCurve::AddAncher(int index) {
+	Vector2 temp = *(anchorPoint_.begin() + index);
+	temp.x += 20;
+	temp.y += 20;
+	anchorPoint_.insert(anchorPoint_.begin() + index + 1, temp);
+	//anchorPoint_.push_back(temp);
+}
+
+// メンバ関数
+
+
+float MyCurve::GetInterpLength(int index) {
+	float result = 0;
+	// 添え字まで
+	for (int i = 0; i <= index; i++) {
+		result += interpLength_[i];
+	}
+	return result;
 }
 
 
@@ -315,7 +505,7 @@ void MyCurve::InterpBezier() {
 		// 一つの線になるまで中間点を作る
 		for (;;) {
 			// 最初から最後まで線形補間させる
-			for (int j = 1; j < preParameters.size();j++) {
+			for (int j = 1; j < preParameters.size(); j++) {
 				parameters.push_back(Mymath::Lerp(preParameters[j - 1], preParameters[j], t));
 			}
 			// 線が 1 本だけ描けるようになったら終了

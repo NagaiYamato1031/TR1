@@ -12,6 +12,15 @@ float Mymath::Clamp(float t, float min, float max) {
 	}
 	return t;
 }
+int Mymath::Clamp(int num, int min, int max) {
+	if (num < min) {
+		return min;
+	}
+	else if (max < num) {
+		return max;
+	}
+	return num;
+}
 
 #pragma region Vector
 

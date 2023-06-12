@@ -13,6 +13,8 @@ enum class LineType {
 extern bool isDrawControl;
 // 補間点を描画するか
 extern bool isDrawInterp;
+// 線を描画するか
+extern bool isDrawLine;
 
 class MyCurve
 {
@@ -50,11 +52,27 @@ public:
 	MyCurve ConvertCSpline(int interpolate);
 
 	/// <summary>
-	/// 全体の中での t の値の場所を返す
+	/// 全体の中での t に近い点の場所を返す、不完全な値参照
 	/// </summary>
 	/// <param name="t">0 ～ 1</param>
 	/// <returns>0 ～ 1 にある t の近似値</returns>
+	Vector2 GetValueNearTPoint(float t);
+	
+	/// <summary>
+	/// t の位置を返す(線形補間とか)
+	/// </summary>
+	/// <param name="t">0 ～ 1</param>
+	/// <returns>全体の中での t の値</returns>
 	Vector2 GetValueT(float t);
+
+
+	Vector2 GetMax();
+	Vector2 GetMin();
+
+	/// <summary>
+	/// 曲線全体の長さを求める
+	/// </summary>
+	void SetLengthAll();
 
 	// 始点の位置
 	Vector2 startPositon_;
@@ -66,11 +84,22 @@ public:
 	// 補間点
 	std::vector<Vector2> interpPoint_;
 
+	// 制御点の間の長さ(ベジェ曲線の時に使えない)
+	std::vector<float> ancherLength_;
+	// 補間点間の長さ
+	std::vector<float> interpLength_;
+
+	// 曲線全体の長さ
+	float curveLength_ = 0;
+
 	// 線のタイプ
 	LineType type_ = LineType::Straight;
 
 	// 点と点の補間数(1 ～ 64)
 	int interpolate_ = 8;
+
+	int addNumber = 0;
+	int resumeNumber = 0;
 
 	/// <summary>
 	/// リストの要素数を確認する
@@ -82,9 +111,25 @@ public:
 	/// 値を消去する
 	/// </summary>
 	/// <param name="index">添え字</param>
-	///void Remove(int index);
+	void ResumeAncher(int index);
+
+	/// <summary>
+	/// 値を追加する
+	/// </summary>
+	void AddAncher();
+	/// <summary>
+	/// 値を指定した場所に追加する
+	/// </summary>
+	/// <param name="index">添え字</param>
+	void AddAncher(int index);
+
+	void SetStartPosition(const Vector2& pos) {
+		startPositon_ = pos;
+	}
 
 private:
+
+	float GetInterpLength(int index);
 
 	void InterpStraight();
 	void InterpCSpline();

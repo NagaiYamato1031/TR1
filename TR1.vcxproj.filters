@@ -41,6 +41,12 @@
     <ClCompile Include="MyCurve.cpp">
       <Filter>KamataEngine</Filter>
     </ClCompile>
+    <ClCompile Include="MyFile.cpp">
+      <Filter>KamataEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="MyCurveManager.cpp">
+      <Filter>KamataEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\KamataEngine\DirectXGame\audio\Audio.h">
@@ -113,5 +119,7 @@
     <ClInclude Include="C:\KamataEngine\DirectXGame\2d\ImGuiManager.h" />
     <ClInclude Include="Mymath.h" />
     <ClInclude Include="MyCurve.h" />
+    <ClInclude Include="MyFile.h" />
+    <ClInclude Include="MyCurveManager.h" />
   </ItemGroup>
 </Project>

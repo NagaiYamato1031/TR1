@@ -108,6 +108,8 @@
     <ClCompile Include="C:\KamataEngine\Adapter\Novice.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyCurve.cpp" />
+    <ClCompile Include="MyCurveManager.cpp" />
+    <ClCompile Include="MyFile.cpp" />
     <ClCompile Include="Mymath.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -138,6 +140,8 @@
     <ClInclude Include="C:\KamataEngine\DirectXGame\scene\GameScene.h" />
     <ClInclude Include="C:\KamataEngine\Adapter\Novice.h" />
     <ClInclude Include="MyCurve.h" />
+    <ClInclude Include="MyCurveManager.h" />
+    <ClInclude Include="MyFile.h" />
     <ClInclude Include="Mymath.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
