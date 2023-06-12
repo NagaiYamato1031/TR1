@@ -85,7 +85,7 @@ public:
 	std::vector<Vector2> interpPoint_;
 
 	// 制御点の間の長さ(ベジェ曲線の時に使えない)
-	std::vector<float> ancherLength_;
+	//std::vector<float> ancherLength_;
 	// 補間点間の長さ
 	std::vector<float> interpLength_;
 

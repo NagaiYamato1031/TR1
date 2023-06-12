@@ -32,75 +32,76 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char preKeys[256] = { 0 };
 
 	MyCurveManager curveManager;
+	curveManager.Initialize();
 
 #pragma region Curve
 
-	MyCurve straight;
-	straight.Initialize();
+	//MyCurve straight;
+	//straight.Initialize();
 
-	straight.startPositon_ = { 100,150 };
-	straight.type_ = LineType::Straight;
-	straight.interpolate_ = 4;
-	straight.anchorPoint_.clear();
-	straight.anchorPoint_.push_back({ 0,0 });
-	straight.anchorPoint_.push_back({ 100,50 });
-	straight.anchorPoint_.push_back({ 200,-50 });
-	straight.anchorPoint_.push_back({ 300,-90 });
-	straight.anchorPoint_.push_back({ 400,80 });
-	straight.anchorPoint_.push_back({ 500,100 });
+	//straight.startPositon_ = { 100,150 };
+	//straight.type_ = LineType::Straight;
+	//straight.interpolate_ = 4;
+	//straight.anchorPoint_.clear();
+	//straight.anchorPoint_.push_back({ 0,0 });
+	//straight.anchorPoint_.push_back({ 100,50 });
+	//straight.anchorPoint_.push_back({ 200,-50 });
+	//straight.anchorPoint_.push_back({ 300,-90 });
+	//straight.anchorPoint_.push_back({ 400,80 });
+	//straight.anchorPoint_.push_back({ 500,100 });
 
-	curveManager.AddCurve(straight);
-
-#ifdef DEBUG
-
-
-
-	MyCurve cSpline;
-	cSpline.Initialize();
-
-	cSpline.startPositon_ = { 100,350 };
-	cSpline.type_ = LineType::CSpline;
-	cSpline.interpolate_ = 8;
-	cSpline.anchorPoint_.clear();
-	cSpline.anchorPoint_.push_back({ 0,0 });
-	cSpline.anchorPoint_.push_back({ 100,50 });
-	cSpline.anchorPoint_.push_back({ 200,-50 });
-	cSpline.anchorPoint_.push_back({ 300,-90 });
-	cSpline.anchorPoint_.push_back({ 400,80 });
-	cSpline.anchorPoint_.push_back({ 500,100 });
-
-	curveManager.AddCurve(cSpline);
-
-	MyCurve bezier;
-	bezier.Initialize();
-
-	bezier.startPositon_ = { 100,550 };
-	bezier.type_ = LineType::Bezier;
-	bezier.interpolate_ = 32;
-	bezier.anchorPoint_.clear();
-	bezier.anchorPoint_.push_back({ 0,0 });
-	bezier.anchorPoint_.push_back({ 100,50 });
-	bezier.anchorPoint_.push_back({ 200,-50 });
-	bezier.anchorPoint_.push_back({ 300,-90 });
-	bezier.anchorPoint_.push_back({ 400,80 });
-	bezier.anchorPoint_.push_back({ 500,100 });
-	bezier.SetInterp();
-
-	curveManager.AddCurve(bezier);
-
-	int ConvertCSplineInterp = 6;
-
-
-	MyCurve bezierToCSpline;
-	bezierToCSpline.Initialize();
-	bezierToCSpline.anchorPoint_.clear();
-	bezierToCSpline = bezier.ConvertCSpline(ConvertCSplineInterp);
-	bezierToCSpline.interpolate_ = 4;
-	bezierToCSpline.startPositon_ = { 700.0f,550.0f };
-
-	curveManager.AddCurve(bezierToCSpline);
-
-#endif // DEBUG
+	//curveManager.AddCurve(straight);
+//
+//#ifdef DEBUG
+//
+//
+//
+//	MyCurve cSpline;
+//	cSpline.Initialize();
+//
+//	cSpline.startPositon_ = { 100,350 };
+//	cSpline.type_ = LineType::CSpline;
+//	cSpline.interpolate_ = 8;
+//	cSpline.anchorPoint_.clear();
+//	cSpline.anchorPoint_.push_back({ 0,0 });
+//	cSpline.anchorPoint_.push_back({ 100,50 });
+//	cSpline.anchorPoint_.push_back({ 200,-50 });
+//	cSpline.anchorPoint_.push_back({ 300,-90 });
+//	cSpline.anchorPoint_.push_back({ 400,80 });
+//	cSpline.anchorPoint_.push_back({ 500,100 });
+//
+//	curveManager.AddCurve(cSpline);
+//
+//	MyCurve bezier;
+//	bezier.Initialize();
+//
+//	bezier.startPositon_ = { 100,550 };
+//	bezier.type_ = LineType::Bezier;
+//	bezier.interpolate_ = 32;
+//	bezier.anchorPoint_.clear();
+//	bezier.anchorPoint_.push_back({ 0,0 });
+//	bezier.anchorPoint_.push_back({ 100,50 });
+//	bezier.anchorPoint_.push_back({ 200,-50 });
+//	bezier.anchorPoint_.push_back({ 300,-90 });
+//	bezier.anchorPoint_.push_back({ 400,80 });
+//	bezier.anchorPoint_.push_back({ 500,100 });
+//	bezier.SetInterp();
+//
+//	curveManager.AddCurve(bezier);
+//
+//	int ConvertCSplineInterp = 6;
+//
+//
+//	MyCurve bezierToCSpline;
+//	bezierToCSpline.Initialize();
+//	bezierToCSpline.anchorPoint_.clear();
+//	bezierToCSpline = bezier.ConvertCSpline(ConvertCSplineInterp);
+//	bezierToCSpline.interpolate_ = 4;
+//	bezierToCSpline.startPositon_ = { 700.0f,550.0f };
+//
+//	curveManager.AddCurve(bezierToCSpline);
+//
+//#endif // DEBUG
 
 #pragma endregion
 
@@ -120,7 +121,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region 実用化用の変数達
 
 	bool isActive = false;
-	bool canActive = true;
+	bool canActive = false;
 	int	useIndex = 0;
 
 	float t = 0.0f;
@@ -209,7 +210,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//bezierToCSpline.startPositon_ = { 700.0f,550.0f };
 		//bezierToCSpline.SetInterp();
 		//test.SetInterp();
-		if (useIndex < 0 || curveManager.curves_.size() < 1) {
+		if (useIndex < 0 || curveManager.curves_.size() <= 1) {
 			canActive = false;
 			isActive = false;
 		}
